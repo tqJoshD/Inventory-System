@@ -1,0 +1,246 @@
+//Inventory System
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <sstream>
+using namespace std;
+
+//i\o keneme
+void saveInventoryToFile(const string& filename) {
+    ofstream outFile(filename);
+    if (!outFile) {
+        cout << "Error opening file for writing!\n";
+        return;
+    }
+    for (const auto& product : inventory) {
+        outFile << product << "\n"; 
+    }
+    outFile.close();
+    cout << "Inventory saved to file.\n";
+}
+
+
+void loadInventoryFromFile(const string& filename) {
+    ifstream inFile(filename);
+    if (!inFile) {
+        cout << "No existing inventory file found.\n";
+        return;
+    }
+    inventory.clear();
+    Product product;
+    while (inFile >> product) {  
+        inventory.push_back(product);
+    }
+    inFile.close();
+    cout << "Inventory loaded from file.\n";
+}
+
+template <typename T, typename Predicate>
+T searchInventory(const vector<T>& inventory, Predicate pred) {
+    for (const auto& item : inventory) {
+        if (pred(item)) {
+            return item;  
+        }
+    }
+    throw runtime_error("Item not found!");  
+}
+
+bool searchByProductNumber(const Product& p) {
+    return p.getProductNumber() == 1001;  
+}
+
+
+bool searchByProductName(const Product& p) {
+    return p.productname == "Wooden Chair"; 
+}
+
+
+
+class Product {
+public:
+    string productname;
+    string producttype;
+    int productsize;
+    int productprize;
+    int productquantity;
+    int productnumber;
+
+    static int lastProductNumber;
+
+    Product() {
+        productnumber = ++lastProductNumber;
+    }
+
+    void setProductsAttribute() {
+        cout << "\nEnter the name of the Product: ";
+        cin >> productname;
+        cout << "Enter the type of Product: ";
+        cin >> producttype;
+        cout << "Enter the product's size: ";
+        cin >> productsize;
+        cout << "Enter the product's price: ";
+        cin >> productprize;
+        cout << "Enter the available stock: ";
+        cin >> productquantity;
+    }
+
+    void displayStock() const {
+        cout << "\nProduct Name: " << productname
+             << "\nProduct Number: " << productnumber
+             << "\nAvailable Stocks: " << productquantity
+             << "\nProduct Price: " << productprize << "\n";
+    }
+
+    int getProductNumber() const {
+        return productnumber;
+    }
+
+    int getInventoryValue() const {
+        return productprize * productquantity;
+    }
+
+    friend ostream& operator<<(ostream& os, const Product& product);
+};
+
+int Product::lastProductNumber = 0;
+vector<Product> inventory;
+
+ostream& operator<<(ostream& os, const Product& product) {
+    os << product.productname << ","
+       << product.productnumber << ","
+       << product.producttype << ","
+       << product.productsize << ","
+       << product.productprize << ","
+       << product.productquantity;
+    return os;
+}
+
+istream& operator>>(istream& is, Product& product) {
+    getline(is, product.productname, ',');
+    is >> product.productnumber; is.ignore();
+    getline(is, product.producttype, ',');
+    is >> product.productsize; is.ignore();
+    is >> product.productprize; is.ignore();
+    is >> product.productquantity;
+    is.ignore();
+    return is;
+}
+
+void AddNewProduct() { 
+    Product product;
+    product.setProductsAttribute();
+    inventory.push_back(product);
+    cout << "Product added successfully. Product Number: " << product.getProductNumber() << "\n";
+}
+
+void SearchStock() {
+//need to add option to search by prodNum or prodName
+    try {
+        Product foundProduct = searchInventory(inventory, searchByProductNumber);
+        cout << foundProduct << endl;  
+    } catch (const runtime_error& e) {
+        cout << e.what() << endl;  
+    }
+}
+
+
+void UpdateStock() {
+    int productnum;
+    cout << "Enter product number: ";
+    cin >> productnum;
+
+    bool found = false;
+    for (auto& product : inventory) {
+        if (product.getProductNumber() == productnum) {
+            product.displayStock();
+            cout << "Enter new quantity: ";
+            cin >> product.productquantity;
+            cout << "Stock updated successfully.\n";
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        cout << "Product not found.\n";
+    }
+}
+
+void DisplayAllProduct() {
+    if (inventory.empty()) {
+        cout << "Inventory is empty.\n";
+        return;
+    }
+    for (const auto& product : inventory) {
+        cout << product;
+    }
+}
+
+void CalculateInventoryValue() {
+    int totalValue = 0;
+    for (const auto& product : inventory) {
+        totalValue += product.getInventoryValue();
+    }
+    cout << "Total inventory value: " << totalValue << "\n";
+}
+//what if i tor-tree-lla nako ang shop name
+
+void DeleteProduct() {
+    int productnum;
+    cout << "Enter product number to delete: ";
+    cin >> productnum;
+
+    for (auto it = inventory.begin(); it != inventory.end(); ++it) {
+        if (it->getProductNumber() == productnum) {
+            inventory.erase(it);
+            cout << "Product deleted successfully.\n";
+            return;
+        }
+    }
+    cout << "Product not found.\n";
+}
+
+int main() {
+    loadInventoryFromFile("inventory.txt");
+
+    int choicemain;
+    while (true) {
+        cout << "\n------ Tortilla Inventory System ------\n"
+             << "1 - Add New Product\n"
+             << "2 - Search Stock\n"
+             << "3 - Update Stock\n"
+             << "4 - Display All Products\n"
+             << "5 - Calculate Inventory Value\n"
+             << "6 - Delete Product\n"
+             << "7 - Exit\n"
+             << "Enter your choice: ";
+        cin >> choicemain;
+
+            switch (choicemain) {
+                case 1:
+                    AddNewProduct();
+                    break;
+                case 2:
+                    SearchStock();
+                    break;
+                case 3:
+                    UpdateStock();
+                    break;
+                case 4:
+                    DisplayAllProduct();
+                    break;
+                case 5:
+                    CalculateInventoryValue();
+                    break;
+                case 6:
+                    DeleteProduct();
+                    break;
+                case 7:
+                    saveInventoryToFile("inventory.txt");
+                    cout << "Exiting system. Goodbye!\n";
+                    return 0;
+                default:
+                    cout << "Invalid choice. Please enter a number between 1 and 7.";
+        }
+    }
+}
