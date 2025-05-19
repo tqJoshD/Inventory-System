@@ -20,7 +20,9 @@ public:
         productnumber = ++lastProductNumber;
     }
 
-    void setProductsAttribute() {
+    virtual ~Product() {} 
+
+    virtual void setProductsAttribute() {
         cout << "\nEnter the name of the Product: ";
         cin >> ws; getline(cin, productname);
         cout << "Enter the type of Product: ";
@@ -33,10 +35,14 @@ public:
         cin >> productquantity;
     }
 
-    void displayStock() const {
+    virtual void displayStock() const {
         cout << "\nProduct Name: " << productname
              << "\nProduct Number: " << productnumber
              << "\nAvailable Stocks: " << productquantity << endl;
+    }
+
+    virtual string getType() const {
+        return "Generic Product";
     }
 
     int getProductNumber() const {
@@ -53,31 +59,67 @@ public:
 
 int Product::lastProductNumber = 0;
 
-ostream& operator<<(ostream& os, const Product& product) {
-    os << product.productname << ","
-       << product.productnumber << ","
-       << product.producttype << ","
-       << product.productsize << ","
-       << product.productprize << ","
-       << product.productquantity;
-    return os;
-}
+class Furniture : public Product {
+public:
+    string material;
 
-istream& operator>>(istream& is, Product& product) {
-    getline(is, product.productname, ',');
-    is >> product.productnumber; is.ignore();
-    getline(is, product.producttype, ',');
-    getline(is, product.productsize, ',');
-    is >> product.productprize; is.ignore();
-    is >> product.productquantity; is.ignore();
-    return is;
-}
+    void setProductsAttribute() override {
+        Product::setProductsAttribute();
+        producttype = "Furniture";
+        cout << "Enter the material: ";
+        cin >> ws; getline(cin, material);
+    }
+
+    void displayStock() const override {
+        Product::displayStock();
+        cout << "Material: " << material << endl;
+    }
+
+    string getType() const override {
+        return "Furniture";
+    }
+};
+
+class Tool : public Product {
+public:
+    string usage;
+
+    void setProductsAttribute() override {
+        Product::setProductsAttribute();
+        producttype = "Tool";
+        cout << "Enter the tool's usage: ";
+        cin >> ws; getline(cin, usage);
+    }
+
+    void displayStock() const override {
+        Product::displayStock();
+        cout << "Usage: " << usage << endl;
+    }
+
+    string getType() const override {
+        return "Tool";
+    }
+};
 
 vector<Product*> inventory;
 vector<Product*> deletedInventory;
 
 void AddNewProduct() {
-    Product* product = new Product();
+    int typeChoice;
+    cout << "Select product type: 1 - Furniture, 2 - Tool, 3 - Other: ";
+    cin >> typeChoice;
+
+    Product* product = nullptr;
+
+    switch (typeChoice) {
+        case 1: product = new Furniture(); break;
+        case 2: product = new Tool(); break;
+        case 3: product = new Product(); break;
+        default:
+            cout << "Invalid choice. Adding as generic product.\n";
+            product = new Product(); break;
+    }
+
     product->setProductsAttribute();
     inventory.push_back(product);
     cout << "Product added successfully. Product Number: " << product->getProductNumber() << "\n";
@@ -247,6 +289,35 @@ void CleanUp() {
     for (auto* product : deletedInventory) delete product;
     inventory.clear();
     deletedInventory.clear();
+}
+
+ostream& operator<<(ostream& os, const Product& product) {
+    os << product.productnumber << ","
+       << product.productname << ","
+       << product.producttype << ","
+       << product.productsize << ","
+       << product.productprize << ","
+       << product.productquantity;
+    return os;
+}
+
+istream& operator>>(istream& is, Product& product) {
+    string line;
+    if (getline(is, line)) {
+        stringstream ss(line);
+        string token;
+
+        getline(ss, token, ',');
+        product.productnumber = stoi(token);
+        getline(ss, product.productname, ',');
+        getline(ss, product.producttype, ',');
+        getline(ss, product.productsize, ',');
+        getline(ss, token, ',');
+        product.productprize = stoi(token);
+        getline(ss, token, ',');
+        product.productquantity = stoi(token);
+    }
+    return is;
 }
 
 int main() {
