@@ -27,14 +27,14 @@ public:
     virtual void setProductsAttribute() {
         cout << "\nEnter the name of the Product: ";
         cin >> ws; getline(cin, productname);
-        cout << "Enter the type of Product: ";
+        cout << "Enter the type of Product (ex. handcrafted, machine made, etc) : ";
         getline(cin, producttype);
-        cout << "Enter the product's size: ";
+        cout << "Enter the product's size (ex. medium, large, etc.) : ";
         getline(cin, productsize);
 
         while (true) {
             try {
-                cout << "Enter the product's price: ";
+                cout << "Enter the product's price (in pesos): ";
                 string priceStr;
                 getline(cin, priceStr);
                 productprize = stoi(priceStr);
@@ -90,7 +90,7 @@ public:
     void setProductsAttribute() override {
         Product::setProductsAttribute();
         producttype = "Furniture";
-        cout << "Enter the material: ";
+        cout << "Enter the type of wood: ";
         cin >> ws; getline(cin, material);
     }
 
